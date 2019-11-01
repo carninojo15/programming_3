@@ -15,5 +15,13 @@ int main() {
 
 unsigned setbits(unsigned x,int p,int n,unsigned y)
 {
-    return ((x & ~(~(~0 << n) << p+1-n)) | ((~(~0 << n) & y) << p+1-n));
+    printf("%d", x);
+    /* get n bits at the right most position 
+    then shift by position p to grt from bits from position p*/
+    unsigned mask = ~(~0 << n) << (4+1-n);
+    /* Similar but get what we want from y */
+    unsigned rhs = (~(~0 << n) & y) << (p+1-n);
+    /*use mask for get bits we want from x */
+    unsigned masked = x & ~(mask);
+    return masked | rhs;
 }

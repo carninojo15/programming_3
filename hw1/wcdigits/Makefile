@@ -7,4 +7,4 @@ wcdigits.o: wcdigits.c
 	gcc -c wcdigits.c
 
 clean:
-	rm -f wcdigits.o
+	rm -f wcdigits wcdigits.o core *~

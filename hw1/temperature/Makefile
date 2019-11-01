@@ -7,4 +7,4 @@ temperature.o: temperature.c
 	gcc -c temperature.c
 
 clean:
-	rm -f temperature.o
+	rm -f temperature temperature.o core *~
