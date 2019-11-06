@@ -7,6 +7,6 @@ setbits.o: setbits.c
 		gcc -c setbits.c
 
 clean:
-		rm -f setbits.o
+		rm -f setbits setbits.o core *~
 
 
