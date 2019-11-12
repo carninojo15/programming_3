@@ -11,18 +11,16 @@ struct node_t {
     struct node_t* next; 
 } *head, *tail;
 
-//struct node_t (*head) = NULL; 
-//struct node_t (*tail) = NULL; 
-
 void insert(char* str){
     struct node_t* newNode = (struct node_t*)malloc(sizeof(struct node_t));
-    newNode->str = str;
+    newNode->str = (char*)malloc((strlen(str)+1)*sizeof(char));
+    strcpy(newNode->str,str);
     newNode->next = NULL;
     
     // For first node in DLL
     if(head==NULL){
-        head = str;
-        tail = str;
+        head = newNode;
+        tail = newNode;
         head->prev = NULL;
         return;
     }
@@ -56,48 +54,54 @@ void insert(char* str){
     newNode->next = temp; 
 }
 
-void delete(char* str)
-{
-    struct node_t *temp = head;
-
-    if (head == NULL) 
+void delete(char* str){
+    struct node_t *temp = head;  
+    // If DLL is empty.
+    if (head == NULL){ 
+        printf("Null list. Please insert elements.\n");
         return;
-
-    while (temp->next != NULL){
-        if (strcmp(temp->str, str) == 0){
-            if (temp->prev != NULL){
-                temp->prev->next = temp->next;
-            }
-            if (temp->next != NULL){
-                temp->next->prev = temp->prev;
-            }
-            if (head == temp){
-                head = temp->next;
-            }
-            free(temp);
+    }
+    // Find the node that is to be deleted.
+    while(strcmp(temp->str,str) != 0){
+        if(temp == NULL){
+            printf("This node does not exist.\n");
             return;
         }
         temp = temp->next;
     }
+    // If there is only one element in DLL
+    if(temp == head && head == tail){
+        head = NULL;
+        tail = NULL;
+        printf("List is now empty\n");
+        return;
+    }
+    // If we are deleting head node
+    if(temp == head){
+        head = temp->next;
+        printf("Head node deleted.\n");
+        return;
+    }
+    if(temp->next != NULL)
+        temp->next->prev = temp->prev;
+    if(temp->prev != NULL)
+        temp->prev->next = temp->next; 
 }
 
 void list(int reverse_order){
+    int node_num = 1;
     /*print from beginning to end*/
     if(reverse_order==0){
         struct node_t *temp = (struct node_t*)malloc(sizeof(struct node_t));
-        int n = 1;
-
         if(head == NULL){
             printf("List is empty.");
         }
         else{
             temp = head;
-            printf("\n\nDATA IN THE LIST:\n");
-
             while(temp != NULL){
-                printf("DATA of %d node = %d\n", n, temp->str);
-                n++;
-                /* Move the current pointer to next node */
+                printf("Contents of node %d = %s\n", node_num, temp->str);
+                node_num++;
+                // To next node
                 temp = temp->next;
             }
         }
@@ -106,19 +110,16 @@ void list(int reverse_order){
     /*print from end to beginning*/
     else{
         struct node_t *temp = (struct node_t*)malloc(sizeof(struct node_t));
-        int n = 0;
-
         if(tail == NULL){
             printf("List is empty.");
         }
         else{
             temp = tail;
-            printf("\n\nDATA IN THE LIST:\n");
 
             while(temp != NULL){
-                printf("DATA of last-%d node = %d\n", n, temp->str);
-                n++;
-                /* Move the current pointer to previous node */
+                printf("Contents of node -%d = %s\n", node_num, temp->str);
+                node_num++;
+                // To next node
                 temp = temp->prev; 
             }
         }
