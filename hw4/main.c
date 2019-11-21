@@ -57,15 +57,14 @@ int enlarge(PIXEL* original, int rows, int cols, int scale,
  * newrows  - the new number of rows
  * newcols  - the new number of cols
  */
-/*int rotate(PIXEL* original, int rows, int cols, int rotation,
+int rotate(PIXEL* original, int rows, int cols, int rotation,
 	   PIXEL** new, int* newrows, int* newcols){
   int row, col;
-
+  *new = (PIXEL*)malloc((*newrows)*(*newcols)*sizeof(PIXEL));
   // ccw
   if((rotation > 0 && rotation % 270 == 0)){
     *newrows = cols;
     *newcols = rows;
-    *new = (PIXEL*)malloc((*newrows)*(*newcols)*sizeof(PIXEL));
     for (row=0; row < rows; row++){
       for (col=0; col < cols; col++) {
         PIXEL* o = original + row*cols + col;
@@ -78,7 +77,6 @@ int enlarge(PIXEL* original, int rows, int cols, int scale,
   else if((rotation > 0 && rotation % 90 == 0)){
     *newrows = cols;
     *newcols = rows;
-    *new = (PIXEL*)malloc((*newrows)*(*newcols)*sizeof(PIXEL));
     for (row=0; row < rows; row++){
       for (col=0; col < cols; col++) {
         PIXEL* o = original + row*cols + col;
@@ -88,7 +86,7 @@ int enlarge(PIXEL* original, int rows, int cols, int scale,
     }
   }
   return 0;
-} */
+} 
 
 /*
  * This method horizontally flips a 24-bit, uncompressed bmp file
@@ -138,17 +136,17 @@ int flipv(PIXEL *original, PIXEL **new, int rows, int cols){
   *new = (PIXEL*)malloc(rows*cols*sizeof(PIXEL));
 
   for (row=0; row < rows; row++)
-    for (col=0; col < cols; col++) {
-      PIXEL* o = original + row*cols + col;
-      PIXEL* n = (*new) + (rows-row)*cols - (col+1);
-      *n = *o;
-    }
-  for (row=0; row < rows; row++)
+      for (col=0; col < cols; col++) {
+        PIXEL* o = original + row*cols + col;
+        PIXEL* n = (*new) + (rows-1-row)*cols + col;
+        *n = *o;
+      }
+ /* for (row=0; row < rows; row++)
     for (col=0; col < cols; col++) {
       PIXEL* o = original + row*cols + col;
       PIXEL* n = (*new) + row*cols + (cols-1-col);
       *n = *o;
-    }
+    }*/
 
   return 0;
 }
@@ -157,7 +155,7 @@ int main(int argc, char *argv[])
 {
   int r, c, nr, nc;
   PIXEL *b, *nb;
-  int scale, cw, ccw, fliph, flipv, out;
+  int scale, cw, ccw, flh, flv, out;
   int argind;
   int scale_value;
   char* infile;
@@ -166,41 +164,40 @@ int main(int argc, char *argv[])
   // initiatize values
   infile = NULL;
   outfile = NULL;
-  argind = scale_value = scale = cw = ccw = fliph = flipv = out = 0;
+  argind = scale_value = scale = cw = ccw = flh = flv = out = 0;
 
-  while((c=getopt(argc,argv,"srfo")) != -1){
+  while((c=getopt(argc,argv,"srcfvo")) != -1){
     switch(c){
       case '?': 
         exit(-1);
         break;
-      case 's':
+      case 's': //works
         if(scale) exit(-1);
         scale = 1;
         break;
-      case 'r':
+      case 'r': //works
         if(cw) exit(-1);
         cw = 1;
         break;
-      case 'c':
+      case 'c': //works
         if(ccw) exit(-1);
         ccw = 1;
-        break;
-      case 'f':
-        if(fliph) exit(-1);
-        fliph = 1;
+        break; 
+      case 'f': //works
+        if(flh) exit(-1);
+        flh = 1;
         break;
       case 'v':
-        if(flipv) exit(-1);
-        flipv = 1;
+        if(flv) exit(-1);
+        flv = 1;
         break;
-      case 'o':
+      case 'o': //works
         if(out) exit(-1);
         out = 1;
         break;
       default:
-        fprintf(stderr, "usage: bmptool [-s scale | -r degree | -f ] [-o output_file] [input_file] \n");
+        fprintf(stderr, "usage: ./bmptool [-s scale | -r  | -c | -f | -v] [-o output_file] [input_file] \n");
         exit(1);
-        printf("You did nothing to the image.");
     }
   }
 
@@ -217,7 +214,7 @@ int main(int argc, char *argv[])
     r = nr;
     c = nc;
   }
-  /*if(cw){
+  if(cw){
     rotate(b, r, c, 90, &nb, &nr, &nc);
     r = nr;
     c = nc;
@@ -226,13 +223,13 @@ int main(int argc, char *argv[])
     rotate(b, r, c, 270, &nb, &nr, &nc);
     r = nr;
     c = nc;
-  }*/
-  if(fliph){
+  }
+  if(flh){
     flip(b, &nb, r, c);
   }
-  if(flipv){
-    //flipv(b, &nb, r, c);
-    flip(b, &nb, r, c);
+  if(flv){
+    flipv(b, &nb, r, c);
+    //flip(b, &nb, r, c);
   }
 
   writeFile(outfile, r, c, nb);
