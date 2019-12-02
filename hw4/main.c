@@ -141,18 +141,10 @@ int flipv(PIXEL *original, PIXEL **new, int rows, int cols){
         PIXEL* n = (*new) + (rows-1-row)*cols + col;
         *n = *o;
       }
- /* for (row=0; row < rows; row++)
-    for (col=0; col < cols; col++) {
-      PIXEL* o = original + row*cols + col;
-      PIXEL* n = (*new) + row*cols + (cols-1-col);
-      *n = *o;
-    }*/
-
   return 0;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
   int r, c, nr, nc;
   PIXEL *b, *nb;
   int scale, cw, ccw, flh, flv, out;
@@ -187,7 +179,7 @@ int main(int argc, char *argv[])
         if(flh) exit(-1);
         flh = 1;
         break;
-      case 'v':
+      case 'v': //works
         if(flv) exit(-1);
         flv = 1;
         break;
