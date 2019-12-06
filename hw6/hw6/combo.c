@@ -2,82 +2,72 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
-
-//execlp("/usr/bin/sort", "sort", "<", argv[0], NULL); 
-//execlp("/bin/grep", "grep", "include", NULL);
-//execlp("usr/bin/wc", "wc", ">", argv[1], NULL); 
-
-int fd1[2], fd2[2];
-pid_t pid;
-
-void cmd0(char* input_file){
-    printf("doing cmd0\n");
-    close(fd1[0]); // close unused pipe
-    dup2(fd1[1], 1);
-    close(fd1[1]);
-    execlp("/usr/bin/sort", "sort <", input_file, NULL);
-    fprintf(stderr, "Sort not executed properly\n");
-    exit(-1);
-}
-
-void cmd1(){
-    printf("doing cmd1\n");
-    close(fd1[1]);
-    close(fd2[0]);
-    dup2(fd1[0], 0);
-    dup2(fd2[1], 1);
-    close(fd1[0]);
-    close(fd2[1]);
-    execlp("/bin/grep", "grep", "include", NULL);
-    fprintf(stderr, "grep not executed properly\n");
-    exit(-1);
-}
-
-void cmd2(char* output_file){
-    printf("doing cmd2\n");
-    close(fd2[1]);
-    dup2(fd2[0], 0);
-    close(fd2[0]);
-    execlp("usr/bin/wc", "wc >", output_file, NULL); 
-    fprintf(stderr, "wc not executed properly\n");
-    exit(-1);
-}
+#include <fcntl.h>
 
 int main(int argc, char** argv []){
-    if(argc != 3){
+    /*if(argc != 3){
         fprintf(stderr, "Expected format: ./combo input_file.c output_file");
         exit(-1);
+    }*/
+
+    int fd0[2], fd1[2];
+    pid_t pid0;
+    // to set pipes and file
+    // fd0[0] = read by grep
+    // fd0[1] = written by sort
+    // fd1[0] = read by wc
+    // fd1[1] = written by grep
+
+    if (pipe(fd0)<0 || pipe(fd1)<0) { 
+        perror("Pipe Failed" ); 
+        exit(-1); 
+    } 
+
+    pid0 = fork();
+    if (pid0 == -1){
+        perror("fork failure\n");
+        exit(-1);
     }
-
-    pipe(fd1); // file descriptors set fd[1] for writing
-    pipe(fd2);
-    pid = fork(); 
-    char *ch0 = argv[0];
-    char *ch1 = argv[1];
-
-    if ((pid = fork()) == -1) {
-        perror("bad fork1");
-        exit(1);
-    } 
-    else if (pid == 0)
-        cmd0(ch0); // stdin -> sort ->  fd1
-
-    if ((pid = fork()) == -1) {
-        perror("bad fork2");
-        exit(1);
-    } 
-    else if (pid == 0) 
-        cmd1(); // fd1 -> grep -> fd2
-
-    close(fd1[0]);
-    close(fd1[1]);
-
-    if ((pid = fork()) == -1) {
-        perror("bad fork3");
-        exit(1);
-    }  
-    else if (pid == 0) 
-        cmd2(ch1); // fd2 -> wc -> stdout (the output file)
-    return 0;
+    else if (pid0 > 0){
+        pid_t pid1;
+        pid1 = fork();
+        if (pid1 == -1){
+            perror("fork failure\n");
+            exit(-1);
+        }
+        else if (pid1 > 0){ // parent, wc
+            int out = open(argv[2], O_WRONLY|O_CREAT, 0666);
+            close(1);
+            dup(out);
+            dup2(fd1[0], STDIN_FILENO);
+            //dup2(out, STDOUT_FILENO);
+            close(fd0[0]);
+            close(fd0[1]);
+            close(fd1[0]);
+            close(fd1[1]);
+            execlp("wc", "wc", NULL);
+            close(out);
+        }
+        else{ // child 1, grep
+            dup2(fd0[0], STDIN_FILENO);
+            dup2(fd1[1], STDOUT_FILENO);
+            close(fd0[0]);
+            close(fd0[1]);
+            close(fd1[0]);
+            close(fd1[1]);
+            execlp("grep", "grep", "include", NULL);
+        }
+    }
+    else{ // child0, sort
+        int in = open(argv[1], O_RDONLY);
+        dup2(in, STDIN_FILENO);
+        dup2(fd0[1], STDOUT_FILENO);
+        close(fd0[0]);
+        close(fd0[1]);
+        close(fd1[0]);
+        close(fd1[1]);
+        close(in);
+        execlp("sort", "sort", NULL);
+    }
 }
 

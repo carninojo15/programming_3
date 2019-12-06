@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
       printf("%s", buf);
     }
     close(pp[0]);
-  } else {
+  } else { // child
     dup2(fd, STDIN_FILENO);
     dup2(pp[1], STDOUT_FILENO);
     close(fd);

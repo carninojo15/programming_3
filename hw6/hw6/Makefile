@@ -1,9 +1,9 @@
 all: combo
 
-combo: combo.o
+combo:	combo.o
 	gcc combo.o -o combo
 
-combo.o: combo.c
+combo.o:	combo.c
 	gcc -c combo.c -o combo.o
 
 clean:
