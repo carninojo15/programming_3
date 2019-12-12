@@ -5,18 +5,21 @@
 #include <fcntl.h>
 
 int main(int argc, char** argv []){
-    /*if(argc != 3){
+    if(argc != 3){
         fprintf(stderr, "Expected format: ./combo input_file.c output_file");
         exit(-1);
-    }*/
+    }
 
     int fd0[2], fd1[2];
     pid_t pid0;
-    // to set pipes and file
+    int in, out; // to set pipes and file
     // fd0[0] = read by grep
     // fd0[1] = written by sort
     // fd1[0] = read by wc
     // fd1[1] = written by grep
+
+    char* arg0 = (char*)argv[1];
+    char* arg1 = (char*)argv[2];
 
     if (pipe(fd0)<0 || pipe(fd1)<0) { 
         perror("Pipe Failed" ); 
@@ -36,17 +39,16 @@ int main(int argc, char** argv []){
             exit(-1);
         }
         else if (pid1 > 0){ // parent, wc
-            int out = open(argv[2], O_WRONLY|O_CREAT, 0666);
-            close(1);
-            dup(out);
+            out = open(arg1, O_RDWR|O_CREAT|O_APPEND, 0777);
             dup2(fd1[0], STDIN_FILENO);
-            //dup2(out, STDOUT_FILENO);
+            dup2(out, STDOUT_FILENO);
             close(fd0[0]);
             close(fd0[1]);
             close(fd1[0]);
             close(fd1[1]);
-            execlp("wc", "wc", NULL);
             close(out);
+            execlp("wc", "wc", NULL);
+            
         }
         else{ // child 1, grep
             dup2(fd0[0], STDIN_FILENO);
@@ -59,7 +61,7 @@ int main(int argc, char** argv []){
         }
     }
     else{ // child0, sort
-        int in = open(argv[1], O_RDONLY);
+        in = open(arg0, O_RDONLY);
         dup2(in, STDIN_FILENO);
         dup2(fd0[1], STDOUT_FILENO);
         close(fd0[0]);
